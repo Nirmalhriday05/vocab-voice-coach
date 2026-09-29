@@ -1,0 +1,986 @@
+<!doctype html>
+<html lang="en" translate="no" class="notranslate">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="google" content="notranslate">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<style>:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font-size:14px}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body translate="no" class="notranslate">
+<title>Vocab Voice Coach</title>
+<meta name="google" content="notranslate">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Noto+Sans+Devanagari:wght@400;500;600&family=Noto+Sans+Kannada:wght@400;500;600&display=swap">
+<style>
+/* Layout concept: a quiet monochrome study card. Serif display word as the hero, hairline rules,
+   one ink colour doing all the emphasis; green and red appear only as feedback signals. */
+:root{
+  --bg:#F6F6F4; --surface:#FFFFFF; --surface-2:#F0F0ED; --fg:#0C0C0C; --muted:#6E6E6A;
+  --border:#E3E3DF; --line:#CFCFCA; --inv:#FFFFFF; --good:#2D6A4C; --bad:#A3432D;
+  --font-display:'Instrument Serif',Georgia,serif;
+  --font-body:'Geist','Public Sans',system-ui,sans-serif;
+  --font-hi:'Noto Sans Devanagari','Geist',system-ui,sans-serif;
+  --font-kn:'Noto Sans Kannada','Geist',system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0A0A0A; --surface:#121212; --surface-2:#1A1A1A; --fg:#F3F3F0; --muted:#9B9B96;
+    --border:#242424; --line:#343434; --inv:#0A0A0A; --good:#7FC6A1; --bad:#E48B74; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0A0A0A; --surface:#121212; --surface-2:#1A1A1A; --fg:#F3F3F0; --muted:#9B9B96;
+  --border:#242424; --line:#343434; --inv:#0A0A0A; --good:#7FC6A1; --bad:#E48B74; color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--font-body);padding-inline:16px;-webkit-font-smoothing:antialiased}
+body.l-hi{font-family:var(--font-hi)} body.l-kn{font-family:var(--font-kn)}
+.wrap{max-width:640px;margin:0 auto;padding-block:32px 56px;display:flex;flex-direction:column;gap:20px}
+.head-top{display:flex;align-items:flex-end;justify-content:space-between;gap:14px;flex-wrap:wrap}
+.eyebrow{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:500}
+.title{font-family:var(--font-display);font-weight:400;font-size:clamp(34px,7vw,46px);line-height:1;margin:6px 0 0;letter-spacing:-.01em}
+.title i{font-style:italic;color:var(--muted)}
+.sub{color:var(--muted);font-size:14px;line-height:1.65;max-width:56ch;margin:12px 0 0}
+.langbox{display:flex;flex-direction:column;gap:6px;align-items:flex-end}
+.pills{display:inline-flex;border:1px solid var(--line);border-radius:99px;padding:3px;background:var(--surface);gap:2px}
+.pill{font:inherit;font-size:13px;font-weight:500;background:transparent;color:var(--muted);border:0;padding:6px 13px;border-radius:99px;cursor:pointer;transition:background .2s,color .2s}
+.pill[aria-pressed="true"]{background:var(--fg);color:var(--inv)}
+.pill[data-lang="hi"]{font-family:var(--font-hi)} .pill[data-lang="kn"]{font-family:var(--font-kn)}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:22px;padding:24px;display:flex;flex-direction:column;gap:18px;min-width:0}
+.progress{display:flex;align-items:center;gap:12px;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;letter-spacing:.04em}
+.progress .bar{flex:1;min-width:60px;height:2px;background:var(--border);overflow:hidden;border-radius:2px}
+.progress .bar > i{display:block;height:100%;background:var(--fg);transition:width .4s ease}
+.streak{font-weight:600;color:var(--fg)}
+.word-row{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+.word{font-family:var(--font-display);font-weight:400;font-size:clamp(44px,11vw,64px);line-height:1.05;letter-spacing:-.015em}
+body.l-hi .word{font-family:var(--font-hi);font-weight:600;font-size:clamp(34px,8vw,48px)}
+body.l-kn .word{font-family:var(--font-kn);font-weight:600;font-size:clamp(34px,8vw,48px)}
+.pos{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);border:1px solid var(--line);border-radius:99px;padding:3px 10px}
+.say{font-size:14px;color:var(--muted);margin-top:6px}
+.say b{color:var(--fg);font-weight:600}
+.speak-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.speak-btn{display:inline-flex;align-items:center;gap:8px;background:transparent;color:var(--fg);border:1px solid var(--line);border-radius:99px;padding:8px 15px;font:inherit;font-weight:500;font-size:13px;cursor:pointer;transition:border-color .2s,background .2s}
+.speak-btn:hover{background:var(--surface-2)}
+.speak-btn.on{border-color:var(--fg)}
+.wave{display:inline-flex;align-items:center;gap:2px;height:14px}
+.wave i{width:2px;border-radius:2px;background:var(--fg);height:4px;opacity:.35}
+.wave.on i{animation:wv 900ms ease-in-out infinite}
+.wave i:nth-child(2){animation-delay:120ms}.wave i:nth-child(3){animation-delay:240ms}
+.wave i:nth-child(4){animation-delay:360ms}.wave i:nth-child(5){animation-delay:480ms}
+@keyframes wv{0%,100%{height:4px;opacity:.35}50%{height:14px;opacity:1}}
+.hint{font-size:12.5px;color:var(--muted);line-height:1.5}
+.hint:empty{display:none}
+.meaning{border-left:2px solid var(--fg);padding:2px 0 2px 14px;display:flex;flex-direction:column;gap:4px}
+.meaning-label{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:500}
+.meaning-text{font-size:15px;line-height:1.6}
+.prompt{font-size:16px;line-height:1.7;margin:0}
+.prompt b{font-weight:600;text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:4px}
+.answer{position:relative;margin-bottom:6px;border:1px solid var(--line);border-radius:16px;background:var(--surface);transition:border-color .2s,box-shadow .2s}
+.answer:focus-within{border-color:var(--fg)}
+.answer.listening{margin-bottom:26px;border-color:var(--fg);box-shadow:0 0 0 4px color-mix(in srgb, var(--fg) 8%, transparent)}
+.answer textarea{display:block;width:100%;min-height:96px;resize:vertical;border:0;background:transparent;color:var(--fg);font:inherit;font-size:15.5px;line-height:1.6;padding:14px 60px 14px 16px;border-radius:16px}
+.answer textarea:focus{outline:none}
+.answer-tools{position:absolute;right:10px;bottom:10px;display:flex;gap:6px;align-items:center}
+.icon-btn{width:36px;height:36px;border-radius:50%;display:inline-grid;place-items:center;border:1px solid var(--line);background:var(--surface);color:var(--fg);cursor:pointer;padding:0;transition:background .2s,color .2s,border-color .2s}
+.icon-btn:hover{background:var(--surface-2)}
+.icon-btn.mic{background:var(--fg);color:var(--inv);border-color:var(--fg)}
+.icon-btn.mic.on{background:var(--bad);border-color:var(--bad);color:#fff;animation:ring 1.4s ease-out infinite}
+@keyframes ring{0%{box-shadow:0 0 0 0 color-mix(in srgb, var(--bad) 45%, transparent)}100%{box-shadow:0 0 0 12px transparent}}
+.listen-note{position:absolute;left:16px;bottom:-24px;font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px}
+.listen-note::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--bad);animation:blink 1s ease-in-out infinite}
+@keyframes blink{50%{opacity:.25}}
+@media (prefers-reduced-motion: reduce){.wave.on i,.icon-btn.mic.on,.listen-note::before{animation:none}.wave.on i{opacity:1;height:10px}}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.btn{font:inherit;font-weight:500;font-size:14px;border-radius:99px;padding:11px 20px;border:1px solid transparent;cursor:pointer;transition:opacity .2s,background .2s}
+.btn-primary{background:var(--fg);color:var(--inv)}
+.btn-primary:hover{opacity:.88}
+.btn-ghost{background:transparent;color:var(--fg);border-color:var(--line)}
+.btn-ghost:hover{background:var(--surface-2)}
+.btn-icon{display:inline-flex;align-items:center;gap:7px}
+.btn:disabled{opacity:.4;cursor:default}
+.btn:focus-visible,.pill:focus-visible,.speak-btn:focus-visible,.icon-btn:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
+.kbd{font-size:12px;color:var(--muted);margin-left:auto}
+.feedback{border-radius:16px;padding:16px 18px;font-size:14px;line-height:1.6;display:flex;flex-direction:column;gap:10px;background:var(--surface-2);border-left:3px solid var(--line)}
+.feedback.good{border-left-color:var(--good)} .feedback.bad{border-left-color:var(--bad)}
+.fb-head{font-weight:600;font-size:15px}
+.feedback.good .fb-head{color:var(--good)} .feedback.bad .fb-head{color:var(--bad)}
+.fb-body:empty{display:none}
+.checks{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:5px}
+.checks li{display:flex;gap:9px;align-items:baseline;font-size:13.5px}
+.checks li::before{flex:none;width:14px;text-align:center;font-weight:600}
+.checks li.ok::before{content:"\2713";color:var(--good)}
+.checks li.no::before{content:"\2715";color:var(--bad)}
+.checks li.tip::before{content:"\2022";color:var(--muted)}
+.checks li.tip{color:var(--muted)}
+.checks-label,.model span{display:block;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:500}
+.model{font-size:14.5px;color:var(--fg);border-top:1px solid var(--border);padding-top:10px}
+.model span{margin-bottom:4px}
+.chip-row{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-size:12.5px;border:1px solid var(--line);border-radius:99px;padding:4px 11px;color:var(--muted)}
+.how{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;background:var(--border);border:1px solid var(--border);border-radius:16px;overflow:hidden}
+.how div{background:var(--surface);padding:14px;font-size:13px;line-height:1.5;color:var(--muted)}
+.how b{display:block;color:var(--fg);font-size:13px;font-weight:600;margin-bottom:3px}
+@media (max-width:520px){.how{grid-template-columns:1fr}.langbox{align-items:flex-start}}
+.summary h2{font-family:var(--font-display);font-weight:400;font-size:34px;margin:0}
+.summary h3{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:500;margin:8px 0 0}
+body.l-hi .summary h2{font-family:var(--font-hi);font-weight:600;font-size:26px}
+body.l-kn .summary h2{font-family:var(--font-kn);font-weight:600;font-size:26px}
+.stat-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;background:var(--border);border:1px solid var(--border);border-radius:16px;overflow:hidden}
+.stat{background:var(--surface);padding:16px;display:flex;flex-direction:column;gap:2px}
+.stat b{font-family:var(--font-display);font-weight:400;font-size:34px;font-variant-numeric:tabular-nums;line-height:1}
+.stat span{font-size:12px;color:var(--muted)}
+.verdict{font-size:15px;line-height:1.65;margin:0}
+.wordlist{display:flex;flex-direction:column;gap:10px}
+.wl-row{display:grid;grid-template-columns:132px minmax(0,1fr) auto;align-items:center;gap:10px;font-size:14px}
+.wl-bar{height:3px;border-radius:3px;background:var(--border);overflow:hidden}
+.wl-bar > i{display:block;height:100%}
+.wl-tag{font-size:11px;padding:2px 9px;border-radius:99px;white-space:nowrap;border:1px solid var(--line)}
+.wl-tag.mastered{color:var(--good)} .wl-tag.practice{color:var(--bad)}
+.phrasebook{display:flex;flex-direction:column;gap:10px}
+.pb-item{border-left:2px solid var(--fg);padding:2px 0 2px 12px;font-size:14.5px;line-height:1.6}
+.pb-item small{display:block;font-size:11px;letter-spacing:.06em;color:var(--muted);font-weight:500}
+.empty{font-size:14px;color:var(--muted)}
+.note{font-size:12.5px;color:var(--muted)}
+.foot{text-align:center;margin:0;font-size:11px;letter-spacing:.1em;color:var(--muted)}
+@media (max-width:420px){.wl-row{grid-template-columns:100px minmax(0,1fr) auto}.card{padding:20px}}
+body.l-hi .eyebrow,body.l-kn .eyebrow,body.l-hi .meaning-label,body.l-kn .meaning-label,body.l-hi .checks-label,body.l-kn .checks-label,body.l-hi .model span,body.l-kn .model span,body.l-hi .summary h3,body.l-kn .summary h3,body.l-hi .pos,body.l-kn .pos{letter-spacing:0;text-transform:none;font-size:12.5px}
+[hidden]{display:none!important}
+</style>
+
+<div class="wrap notranslate" translate="no">
+  <header>
+    <div class="head-top">
+      <div>
+        <div class="eyebrow" data-t="eyebrow"></div>
+        <h1 class="title">Vocab <i>Voice</i> Coach</h1>
+      </div>
+      <div class="langbox">
+        <span class="eyebrow" data-t="langLabel"></span>
+        <span class="pills" role="group" aria-label="Language">
+          <button class="pill" data-lang="en" aria-pressed="true">English</button>
+          <button class="pill" data-lang="hi" aria-pressed="false">हिंदी</button>
+          <button class="pill" data-lang="kn" aria-pressed="false">ಕನ್ನಡ</button>
+        </span>
+      </div>
+    </div>
+    <p class="sub" data-t="sub"></p>
+  </header>
+
+  <section id="startCard" class="card">
+    <div class="how">
+      <div><b data-t="how1h"></b><span data-t="how1"></span></div>
+      <div><b data-t="how2h"></b><span data-t="how2"></span></div>
+      <div><b data-t="how3h"></b><span data-t="how3"></span></div>
+    </div>
+    <div class="chip-row" id="wordChips"></div>
+    <div class="row">
+      <button class="btn btn-primary" id="beginBtn" data-t="start"></button>
+      <span class="note" data-t="startNote"></span>
+    </div>
+  </section>
+
+  <section id="playCard" class="card" hidden>
+    <div class="progress">
+      <span id="progLabel"></span>
+      <div class="bar"><i id="progBar" style="width:0%"></i></div>
+      <span id="streak" class="streak"></span>
+    </div>
+
+    <div>
+      <div class="word-row">
+        <span class="word" id="wordText"></span>
+        <span class="pos" id="wordPos"></span>
+      </div>
+      <div class="say" id="wordSay"></div>
+    </div>
+
+    <div class="speak-row">
+      <button class="speak-btn" id="speakBtn"><span class="wave" id="wave"><i></i><i></i><i></i><i></i><i></i></span><span id="speakLbl"></span></button>
+      <button class="speak-btn" id="slowBtn" data-t="slow"></button>
+    </div>
+    <div class="hint" id="hint"></div>
+
+    <div class="meaning">
+      <span class="meaning-label" data-t="meaning"></span>
+      <div class="meaning-text" id="meaningText"></div>
+    </div>
+
+    <p class="prompt" id="promptText"></p>
+
+    <div class="answer" id="answerWrap">
+      <textarea id="answerBox" aria-label="Your sentence"></textarea>
+      <span class="listen-note" id="listenNote" hidden></span>
+      <div class="answer-tools">
+        <button class="icon-btn mic" id="micBtn" type="button" aria-pressed="false"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3"/></svg></button>
+      </div>
+    </div>
+
+    <div class="row">
+      <button class="btn btn-primary" id="submitBtn"></button>
+      <button class="btn btn-ghost btn-icon" id="clearBtn" type="button"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg><span data-t="startOver"></span></button>
+      <button class="btn btn-ghost" id="skipBtn" data-t="skip"></button>
+      <span class="kbd" data-t="enter"></span>
+    </div>
+
+    <div class="feedback" id="feedback" hidden></div>
+    <div class="row" id="nextRow" hidden>
+      <button class="btn btn-primary" id="nextBtn" data-t="next"></button>
+    </div>
+  </section>
+
+  <section id="summaryCard" class="card summary" hidden>
+    <h2 data-t="session"></h2>
+    <p class="verdict" id="verdict"></p>
+    <div class="stat-row">
+      <div class="stat"><b id="statMastered">0</b><span data-t="mastered"></span></div>
+      <div class="stat"><b id="statAccuracy">0%</b><span data-t="firstTry"></span></div>
+      <div class="stat"><b id="statStreak">0</b><span data-t="best"></span></div>
+    </div>
+    <h3 data-t="byWord"></h3>
+    <div class="wordlist" id="wordlist"></div>
+    <h3 data-t="phrasebook"></h3>
+    <p class="note" style="margin:0" data-t="pbNote"></p>
+    <div class="phrasebook" id="phrasebook"></div>
+    <div class="row">
+      <button class="btn btn-primary" id="copyBtn" data-t="copy"></button>
+      <button class="btn btn-ghost" id="restartBtn" data-t="again"></button>
+      <span class="note" id="copyNote"></span>
+    </div>
+  </section>
+</div>
+
+<script>
+(function(){
+  document.documentElement.setAttribute('translate','no');
+  document.documentElement.classList.add('notranslate');
+  document.body.setAttribute('translate','no');
+  document.body.classList.add('notranslate');
+  var T = {
+    en: {
+      checkAgain:"Check again", clear:"Start over", startOver:"Start over", recheckGood:"That works. Nice improvement.", wrongLangSay:"That sounds like a different language. Try again in English.", checked:"What I checked", recheckH:"Checked again (score unchanged)",
+      chkWord:"Uses \"{w}\"", chkWordNo:"\"{w}\" is not in your sentence yet", chkLang:"Written in {want}", chkLangNo:"This looks like {found}. Answer in {want}, or switch the language at the top.",
+      chkLen:"A complete sentence", chkLenNo:"Too short. Use at least {m} words.", chkRep:"Too many repeated words. Make it a real sentence.",
+      chkFit:"Fits the situation", chkFitNo:"Tip: connect it to the situation, for example mention {k}.", chkCaps:"Tip: start with a capital letter and end with a full stop.",
+      L:{en:"English",hi:"Hindi",kn:"Kannada"}, or:" or ",
+      eyebrow:"Workplace vocabulary · voice coached", langLabel:"Language",
+      sub:"Ten words people meet in their first weeks at a new job. The coach reads each word and a real work situation aloud. Answer with a sentence of your own, by voice or by typing.",
+      how1h:"Hear it", how1:"Normal speed, or slowed down.",
+      how2h:"Understand it", how2:"A simple meaning for every word.",
+      how3h:"Use it", how3:"Answer a work situation in your own words and get a model answer back.",
+      start:"Start practice", startNote:"About 5 minutes. Missed words come back once at the end.",
+      wordOf:"Word {n} of {t}", inARow:"{n} in a row", sayIt:"Say it:",
+      hear:"Hear it", stop:"Stop", slow:"Slow", meaning:"Meaning",
+      placeholder:"Write a sentence that uses this word",
+      check:"Check my sentence", voice:"Answer by voice", listening:"Listening… tap the mic to stop", skip:"Skip", enter:"Enter to check", next:"Next word",
+      good1:["Spot on.","That works.","Good, that sounds natural."], good2:["Got it this time.","There you go."],
+      streakBody:"{n} words in a row on the first try.", pbBody:"That goes into your phrasebook.",
+      modelLabel:"How a hiring manager would say it", anotherWay:"Here is another way to say it.",
+      emptyH:"Nothing to check yet", emptyB:"Type or say a sentence first. A short one is fine.",
+      almost:"Almost", needWord:"Your sentence needs the word \"{w}\" in it.", tooShort:"Add a little more. Aim for at least {m} words.", tryAgain:"Try once more.",
+      comeBack:"We'll come back to this one later", moveOn:"Let's move on.", listenUse:"Here's how it's said.",
+      practiceH:"Marked for practice", practiceB:"Read the example once more and try it again in your next session.",
+      secondRound:"second round",
+      session:"Your session", mastered:"words mastered", firstTry:"right on first try", best:"best streak",
+      byWord:"Word by word", phrasebook:"Your phrasebook", pbNote:"Your own sentences, ready to reuse in an interview or your first team meeting.",
+      copy:"Copy phrasebook", again:"Practice again", copied:"Copied.", selected:"Selected. Press Ctrl+C to copy.",
+      pbEmpty:"No sentences saved yet. Your correct answers land here.",
+      tag1:"1st try", tag2:"2nd try", tagPractice:"practice",
+      vAllHigh:"All ten words used correctly, most of them on the first try. You are ready to use these in an interview.",
+      vAll:"All ten words used correctly by the end. A second run will make them automatic.",
+      vPart:"You used {m} of {t} words correctly. Spend two minutes on {list} before your next interview.",
+      endAll:"Session complete. Great work.", endPart:"Session complete. {m} of {t} words mastered.",
+      noVoice:"Voice playback isn't available in this browser, so read along instead.",
+      noLangVoice:"",
+      micBlocked:"The microphone is blocked on this page, so type your answer here.", playMine:"Play my recording", kbMic:"Tap the microphone on your keyboard and speak. Your words will appear in the box.", srErr:"Voice to text stopped ({e}).", noTranscript:"I recorded you but couldn't turn it into text. Play it back, then type what you said.",
+      greet:"Hi, I'm your coach. We'll learn ten words you'll really use at work. Take your time. Here's the first one.",
+      intros:["Next up.","Here's a good one.","This one comes up a lot at work.","Let's try this one."],
+      streak3:"Three in a row. You're on a roll!", streak5:"Five in a row. Brilliant!", almostSay:"Almost there. Give it one more go.",
+      noSpeech:"I didn't catch that. Tap Answer by voice and try again.",
+      minWords:4
+    },
+    hi: {
+      checkAgain:"फिर से जाँचें", clear:"फिर से शुरू करें", startOver:"फिर से शुरू करें", recheckGood:"अब सही है। अच्छा सुधार।", wrongLangSay:"यह दूसरी भाषा लगती है। हिंदी में फिर से कोशिश कीजिए।", checked:"मैंने क्या जाँचा", recheckH:"फिर से जाँचा (स्कोर नहीं बदलेगा)",
+      chkWord:"\"{w}\" का इस्तेमाल किया", chkWordNo:"\"{w}\" अभी आपके वाक्य में नहीं है", chkLang:"{want} में लिखा", chkLangNo:"यह {found} लगता है। {want} में जवाब दीजिए, या ऊपर से भाषा बदलिए।",
+      chkLen:"पूरा वाक्य", chkLenNo:"बहुत छोटा है। कम से कम {m} शब्द लिखिए।", chkRep:"बहुत सारे शब्द दोहराए गए हैं। एक सही वाक्य बनाइए।",
+      chkFit:"स्थिति से मेल खाता है", chkFitNo:"सुझाव: इसे स्थिति से जोड़िए, जैसे {k} का ज़िक्र कीजिए।", chkCaps:"",
+      L:{en:"अंग्रेज़ी",hi:"हिंदी",kn:"कन्नड़"}, or:" या ",
+      eyebrow:"काम की जगह के शब्द · आवाज़ के साथ", langLabel:"भाषा",
+      sub:"नई नौकरी के पहले हफ्तों में काम आने वाले दस शब्द। कोच हर शब्द और काम की एक असली स्थिति पढ़कर सुनाता है। अपना वाक्य बोलकर या लिखकर जवाब दीजिए।",
+      how1h:"सुनिए", how1:"सामान्य गति में, या धीरे-धीरे।",
+      how2h:"समझिए", how2:"हर शब्द का आसान अर्थ।",
+      how3h:"इस्तेमाल कीजिए", how3:"काम की एक स्थिति का जवाब अपने शब्दों में दीजिए और एक आदर्श जवाब पाइए।",
+      start:"अभ्यास शुरू करें", startNote:"लगभग 5 मिनट। छूटे हुए शब्द आखिर में एक बार फिर आएँगे।",
+      wordOf:"शब्द {n} / {t}", inARow:"लगातार {n}", sayIt:"उच्चारण:",
+      hear:"सुनिए", stop:"रोकें", slow:"धीरे", meaning:"अर्थ",
+      placeholder:"इस शब्द का इस्तेमाल करके एक वाक्य लिखिए",
+      check:"मेरा वाक्य जाँचिए", voice:"बोलकर जवाब दें", listening:"सुन रहा हूँ… रोकने के लिए माइक दबाइए", skip:"छोड़ें", enter:"जाँचने के लिए Enter", next:"अगला शब्द",
+      good1:["बिल्कुल सही।","बढ़िया।","अच्छा, यह स्वाभाविक लगता है।"], good2:["इस बार सही हुआ।","यह हुई न बात।"],
+      streakBody:"पहली कोशिश में लगातार {n} शब्द।", pbBody:"यह आपकी वाक्य-पुस्तिका में जुड़ गया।",
+      modelLabel:"एक हायरिंग मैनेजर इसे ऐसे कहेगा", anotherWay:"इसे ऐसे भी कह सकते हैं।",
+      emptyH:"अभी जाँचने के लिए कुछ नहीं", emptyB:"पहले एक वाक्य लिखिए या बोलिए। छोटा वाक्य भी चलेगा।",
+      almost:"लगभग सही", needWord:"आपके वाक्य में \"{w}\" शब्द होना चाहिए।", tooShort:"थोड़ा और जोड़िए। कम से कम {m} शब्द लिखिए।", tryAgain:"एक बार और कोशिश कीजिए।",
+      comeBack:"इस शब्द पर हम बाद में लौटेंगे", moveOn:"चलिए आगे बढ़ते हैं।", listenUse:"इसे ऐसे कहते हैं।",
+      practiceH:"अभ्यास के लिए चिह्नित", practiceB:"उदाहरण एक बार फिर पढ़िए और अगली बार दोबारा कोशिश कीजिए।",
+      secondRound:"दूसरा दौर",
+      session:"आपका सत्र", mastered:"सीखे गए शब्द", firstTry:"पहली कोशिश में सही", best:"सबसे लंबा सिलसिला",
+      byWord:"शब्द-वार", phrasebook:"आपकी वाक्य-पुस्तिका", pbNote:"आपके अपने वाक्य, इंटरव्यू या पहली टीम मीटिंग में दोबारा इस्तेमाल के लिए तैयार।",
+      copy:"वाक्य-पुस्तिका कॉपी करें", again:"फिर से अभ्यास करें", copied:"कॉपी हो गया।", selected:"चुन लिया गया। कॉपी करने के लिए Ctrl+C दबाइए।",
+      pbEmpty:"अभी कोई वाक्य नहीं। आपके सही जवाब यहाँ आएँगे।",
+      tag1:"पहली कोशिश", tag2:"दूसरी कोशिश", tagPractice:"अभ्यास",
+      vAllHigh:"दसों शब्द सही इस्तेमाल हुए, ज़्यादातर पहली ही कोशिश में। आप इन्हें इंटरव्यू में इस्तेमाल करने के लिए तैयार हैं।",
+      vAll:"आखिर तक दसों शब्द सही हो गए। एक बार और अभ्यास करेंगे तो ये अपने आप याद रहेंगे।",
+      vPart:"आपने {t} में से {m} शब्द सही इस्तेमाल किए। अगले इंटरव्यू से पहले {list} पर दो मिनट और दीजिए।",
+      endAll:"सत्र पूरा हुआ। बहुत बढ़िया।", endPart:"सत्र पूरा हुआ। दस में से {m} शब्द सीख लिए।",
+      noVoice:"इस ब्राउज़र में आवाज़ उपलब्ध नहीं है, इसलिए साथ में पढ़िए।",
+      noLangVoice:"इस डिवाइस में हिंदी आवाज़ नहीं मिली। फ़ोन की Settings में Text-to-speech खोलकर हिंदी आवाज़ डाउनलोड कीजिए।",
+      micBlocked:"इस पेज पर माइक्रोफ़ोन बंद है, इसलिए यहाँ लिखकर जवाब दीजिए।", playMine:"मेरी रिकॉर्डिंग सुनें", kbMic:"अपने कीबोर्ड के माइक पर टैप करके बोलिए। आपके शब्द बॉक्स में आ जाएँगे।", srErr:"आवाज़ से लिखना रुक गया ({e})।", noTranscript:"आपकी आवाज़ रिकॉर्ड हो गई, पर लिखित में नहीं बदली। उसे सुनिए, फिर जो बोला वह लिखिए।",
+      greet:"नमस्ते, मैं आपका कोच हूँ। हम दस ऐसे शब्द सीखेंगे जो काम पर सच में काम आते हैं। आराम से कीजिए। यह रहा पहला शब्द।",
+      intros:["अगला शब्द।","यह एक अच्छा शब्द है।","यह शब्द काम पर बहुत आता है।","चलिए, यह वाला आज़माते हैं।"],
+      streak3:"लगातार तीन सही। बहुत बढ़िया चल रहा है!", streak5:"लगातार पाँच सही। कमाल है!", almostSay:"बस थोड़ा सा और। एक बार फिर कोशिश कीजिए।",
+      noSpeech:"आवाज़ सुनाई नहीं दी। बोलकर जवाब दें पर दोबारा टैप कीजिए।",
+      minWords:3
+    },
+    kn: {
+      checkAgain:"ಮತ್ತೆ ಪರಿಶೀಲಿಸಿ", clear:"ಮತ್ತೆ ಶುರು ಮಾಡಿ", startOver:"ಮತ್ತೆ ಶುರು ಮಾಡಿ", recheckGood:"ಈಗ ಸರಿಯಾಗಿದೆ. ಒಳ್ಳೆಯ ಸುಧಾರಣೆ.", wrongLangSay:"ಇದು ಬೇರೆ ಭಾಷೆಯಂತೆ ಕೇಳಿಸುತ್ತದೆ. ಕನ್ನಡದಲ್ಲಿ ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.", checked:"ನಾನು ಏನು ಪರಿಶೀಲಿಸಿದೆ", recheckH:"ಮತ್ತೆ ಪರಿಶೀಲಿಸಲಾಗಿದೆ (ಅಂಕ ಬದಲಾಗುವುದಿಲ್ಲ)",
+      chkWord:"\"{w}\" ಬಳಸಿದ್ದೀರಿ", chkWordNo:"\"{w}\" ಇನ್ನೂ ನಿಮ್ಮ ವಾಕ್ಯದಲ್ಲಿ ಇಲ್ಲ", chkLang:"{want} ಭಾಷೆಯಲ್ಲಿ ಬರೆದಿದ್ದೀರಿ", chkLangNo:"ಇದು {found} ಭಾಷೆಯಂತೆ ಕಾಣುತ್ತದೆ. ಉತ್ತರ {want} ಭಾಷೆಯಲ್ಲಿ ಇರಲಿ, ಅಥವಾ ಮೇಲೆ ಭಾಷೆ ಬದಲಿಸಿ.",
+      chkLen:"ಪೂರ್ಣ ವಾಕ್ಯ", chkLenNo:"ತುಂಬಾ ಚಿಕ್ಕದು. ಕನಿಷ್ಠ {m} ಪದಗಳು ಇರಲಿ.", chkRep:"ತುಂಬಾ ಪದಗಳು ಪುನರಾವರ್ತನೆಯಾಗಿವೆ. ಸರಿಯಾದ ವಾಕ್ಯ ಮಾಡಿ.",
+      chkFit:"ಸನ್ನಿವೇಶಕ್ಕೆ ಹೊಂದುತ್ತದೆ", chkFitNo:"ಸಲಹೆ: ಸನ್ನಿವೇಶಕ್ಕೆ ಜೋಡಿಸಿ, ಉದಾಹರಣೆಗೆ {k} ಬಗ್ಗೆ ಹೇಳಿ.", chkCaps:"",
+      L:{en:"ಇಂಗ್ಲಿಷ್",hi:"ಹಿಂದಿ",kn:"ಕನ್ನಡ"}, or:" ಅಥವಾ ",
+      eyebrow:"ಕೆಲಸದ ಸ್ಥಳದ ಪದಗಳು · ಧ್ವನಿ ಸಹಾಯದೊಂದಿಗೆ", langLabel:"ಭಾಷೆ",
+      sub:"ಹೊಸ ಕೆಲಸದ ಮೊದಲ ವಾರಗಳಲ್ಲಿ ಬೇಕಾಗುವ ಹತ್ತು ಪದಗಳು. ಕೋಚ್ ಪ್ರತಿ ಪದವನ್ನು ಮತ್ತು ಒಂದು ನಿಜವಾದ ಕೆಲಸದ ಸನ್ನಿವೇಶವನ್ನು ಓದಿ ಹೇಳುತ್ತದೆ. ನಿಮ್ಮದೇ ವಾಕ್ಯದಲ್ಲಿ ಮಾತನಾಡಿ ಅಥವಾ ಬರೆದು ಉತ್ತರಿಸಿ.",
+      how1h:"ಕೇಳಿ", how1:"ಸಾಮಾನ್ಯ ವೇಗದಲ್ಲಿ, ಅಥವಾ ನಿಧಾನವಾಗಿ.",
+      how2h:"ಅರ್ಥ ಮಾಡಿಕೊಳ್ಳಿ", how2:"ಪ್ರತಿ ಪದಕ್ಕೂ ಸರಳ ಅರ್ಥ.",
+      how3h:"ಬಳಸಿ", how3:"ಕೆಲಸದ ಸನ್ನಿವೇಶಕ್ಕೆ ನಿಮ್ಮ ಮಾತುಗಳಲ್ಲಿ ಉತ್ತರಿಸಿ, ಮಾದರಿ ಉತ್ತರ ಪಡೆಯಿರಿ.",
+      start:"ಅಭ್ಯಾಸ ಶುರು ಮಾಡಿ", startNote:"ಸುಮಾರು 5 ನಿಮಿಷ. ತಪ್ಪಿದ ಪದಗಳು ಕೊನೆಯಲ್ಲಿ ಇನ್ನೊಮ್ಮೆ ಬರುತ್ತವೆ.",
+      wordOf:"ಪದ {n} / {t}", inARow:"ಸತತ {n}", sayIt:"ಉಚ್ಚಾರಣೆ:",
+      hear:"ಕೇಳಿ", stop:"ನಿಲ್ಲಿಸಿ", slow:"ನಿಧಾನ", meaning:"ಅರ್ಥ",
+      placeholder:"ಈ ಪದ ಬಳಸಿ ಒಂದು ವಾಕ್ಯ ಬರೆಯಿರಿ",
+      check:"ನನ್ನ ವಾಕ್ಯ ಪರಿಶೀಲಿಸಿ", voice:"ಮಾತನಾಡಿ ಉತ್ತರಿಸಿ", listening:"ಕೇಳುತ್ತಿದ್ದೇನೆ… ನಿಲ್ಲಿಸಲು ಮೈಕ್ ಒತ್ತಿ", skip:"ಬಿಡಿ", enter:"ಪರಿಶೀಲಿಸಲು Enter", next:"ಮುಂದಿನ ಪದ",
+      good1:["ಸರಿಯಾಗಿದೆ.","ಚೆನ್ನಾಗಿದೆ.","ಒಳ್ಳೆಯದು, ಸಹಜವಾಗಿದೆ."], good2:["ಈ ಬಾರಿ ಸರಿಯಾಯಿತು.","ಅಷ್ಟೇ, ಸರಿಯಾಯಿತು."],
+      streakBody:"ಮೊದಲ ಪ್ರಯತ್ನದಲ್ಲೇ ಸತತ {n} ಪದಗಳು.", pbBody:"ಇದು ನಿಮ್ಮ ವಾಕ್ಯ ಪುಸ್ತಕಕ್ಕೆ ಸೇರಿತು.",
+      modelLabel:"ನೇಮಕಾತಿ ಮ್ಯಾನೇಜರ್ ಹೀಗೆ ಹೇಳುತ್ತಾರೆ", anotherWay:"ಇದನ್ನು ಹೀಗೂ ಹೇಳಬಹುದು.",
+      emptyH:"ಇನ್ನೂ ಪರಿಶೀಲಿಸಲು ಏನೂ ಇಲ್ಲ", emptyB:"ಮೊದಲು ಒಂದು ವಾಕ್ಯ ಬರೆಯಿರಿ ಅಥವಾ ಹೇಳಿ. ಚಿಕ್ಕದಾದರೂ ಸರಿ.",
+      almost:"ಬಹುತೇಕ ಸರಿ", needWord:"ನಿಮ್ಮ ವಾಕ್ಯದಲ್ಲಿ \"{w}\" ಪದ ಇರಬೇಕು.", tooShort:"ಇನ್ನೂ ಸ್ವಲ್ಪ ಸೇರಿಸಿ. ಕನಿಷ್ಠ {m} ಪದಗಳು ಇರಲಿ.", tryAgain:"ಇನ್ನೊಮ್ಮೆ ಪ್ರಯತ್ನಿಸಿ.",
+      comeBack:"ಈ ಪದಕ್ಕೆ ನಂತರ ಮತ್ತೆ ಬರೋಣ", moveOn:"ಮುಂದೆ ಹೋಗೋಣ.", listenUse:"ಇದನ್ನು ಹೀಗೆ ಹೇಳುತ್ತಾರೆ.",
+      practiceH:"ಅಭ್ಯಾಸಕ್ಕೆ ಗುರುತಿಸಲಾಗಿದೆ", practiceB:"ಉದಾಹರಣೆಯನ್ನು ಇನ್ನೊಮ್ಮೆ ಓದಿ, ಮುಂದಿನ ಬಾರಿ ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.",
+      secondRound:"ಎರಡನೇ ಸುತ್ತು",
+      session:"ನಿಮ್ಮ ಅಭ್ಯಾಸದ ಸಾರಾಂಶ", mastered:"ಕಲಿತ ಪದಗಳು", firstTry:"ಮೊದಲ ಪ್ರಯತ್ನದಲ್ಲೇ ಸರಿ", best:"ಅತಿ ಹೆಚ್ಚು ಸತತ",
+      byWord:"ಪದವಾರು", phrasebook:"ನಿಮ್ಮ ವಾಕ್ಯ ಪುಸ್ತಕ", pbNote:"ನಿಮ್ಮದೇ ವಾಕ್ಯಗಳು, ಸಂದರ್ಶನ ಅಥವಾ ಮೊದಲ ತಂಡದ ಸಭೆಯಲ್ಲಿ ಬಳಸಲು ಸಿದ್ಧ.",
+      copy:"ವಾಕ್ಯ ಪುಸ್ತಕ ಕಾಪಿ ಮಾಡಿ", again:"ಮತ್ತೆ ಅಭ್ಯಾಸ ಮಾಡಿ", copied:"ಕಾಪಿ ಆಯಿತು.", selected:"ಆಯ್ಕೆ ಮಾಡಲಾಗಿದೆ. ಕಾಪಿ ಮಾಡಲು Ctrl+C ಒತ್ತಿ.",
+      pbEmpty:"ಇನ್ನೂ ಯಾವುದೇ ವಾಕ್ಯ ಇಲ್ಲ. ನಿಮ್ಮ ಸರಿಯಾದ ಉತ್ತರಗಳು ಇಲ್ಲಿ ಬರುತ್ತವೆ.",
+      tag1:"ಮೊದಲ ಪ್ರಯತ್ನ", tag2:"ಎರಡನೇ ಪ್ರಯತ್ನ", tagPractice:"ಅಭ್ಯಾಸ",
+      vAllHigh:"ಹತ್ತೂ ಪದಗಳನ್ನು ಸರಿಯಾಗಿ ಬಳಸಿದ್ದೀರಿ, ಹೆಚ್ಚಿನವು ಮೊದಲ ಪ್ರಯತ್ನದಲ್ಲೇ. ಸಂದರ್ಶನದಲ್ಲಿ ಬಳಸಲು ನೀವು ಸಿದ್ಧರಿದ್ದೀರಿ.",
+      vAll:"ಕೊನೆಗೆ ಹತ್ತೂ ಪದಗಳು ಸರಿಯಾದವು. ಇನ್ನೊಮ್ಮೆ ಅಭ್ಯಾಸ ಮಾಡಿದರೆ ಇವು ಸಹಜವಾಗಿ ನೆನಪಿರುತ್ತವೆ.",
+      vPart:"{t}ರಲ್ಲಿ {m} ಪದಗಳನ್ನು ಸರಿಯಾಗಿ ಬಳಸಿದ್ದೀರಿ. ಮುಂದಿನ ಸಂದರ್ಶನಕ್ಕೆ ಮೊದಲು {list} ಮೇಲೆ ಎರಡು ನಿಮಿಷ ಕೊಡಿ.",
+      endAll:"ಅಭ್ಯಾಸ ಮುಗಿಯಿತು. ತುಂಬಾ ಚೆನ್ನಾಗಿದೆ.", endPart:"ಅಭ್ಯಾಸ ಮುಗಿಯಿತು. ಹತ್ತರಲ್ಲಿ {m} ಪದಗಳನ್ನು ಕಲಿತಿದ್ದೀರಿ.",
+      noVoice:"ಈ ಬ್ರೌಸರ್‌ನಲ್ಲಿ ಧ್ವನಿ ಲಭ್ಯವಿಲ್ಲ, ಆದ್ದರಿಂದ ಓದಿಕೊಳ್ಳಿ.",
+      noLangVoice:"ಈ ಸಾಧನದಲ್ಲಿ ಕನ್ನಡ ಧ್ವನಿ ಸಿಗಲಿಲ್ಲ. ಫೋನ್‌ನ Settings ನಲ್ಲಿ Text-to-speech ತೆರೆದು ಕನ್ನಡ ಧ್ವನಿ ಡೌನ್‌ಲೋಡ್ ಮಾಡಿ.",
+      micBlocked:"ಈ ಪುಟದಲ್ಲಿ ಮೈಕ್ರೋಫೋನ್ ಬಂದ್ ಆಗಿದೆ, ಆದ್ದರಿಂದ ಇಲ್ಲಿ ಬರೆದು ಉತ್ತರಿಸಿ.", playMine:"ನನ್ನ ರೆಕಾರ್ಡಿಂಗ್ ಕೇಳಿ", kbMic:"ನಿಮ್ಮ ಕೀಬೋರ್ಡ್‌ನ ಮೈಕ್ ಮೇಲೆ ಟ್ಯಾಪ್ ಮಾಡಿ ಮಾತನಾಡಿ. ನಿಮ್ಮ ಪದಗಳು ಬಾಕ್ಸ್‌ನಲ್ಲಿ ಬರುತ್ತವೆ.", srErr:"ಧ್ವನಿಯಿಂದ ಬರಹ ನಿಂತಿತು ({e}).", noTranscript:"ನಿಮ್ಮ ಧ್ವನಿ ರೆಕಾರ್ಡ್ ಆಯಿತು, ಆದರೆ ಬರಹಕ್ಕೆ ಬದಲಾಗಲಿಲ್ಲ. ಅದನ್ನು ಕೇಳಿ, ನಂತರ ನೀವು ಹೇಳಿದ್ದನ್ನು ಬರೆಯಿರಿ.",
+      greet:"ನಮಸ್ಕಾರ, ನಾನು ನಿಮ್ಮ ಕೋಚ್. ಕೆಲಸದಲ್ಲಿ ನಿಜವಾಗಿ ಬಳಸುವ ಹತ್ತು ಪದಗಳನ್ನು ಕಲಿಯೋಣ. ನಿಧಾನವಾಗಿ ಮಾಡಿ. ಇದು ಮೊದಲ ಪದ.",
+      intros:["ಮುಂದಿನ ಪದ.","ಇದು ಒಳ್ಳೆಯ ಪದ.","ಈ ಪದ ಕೆಲಸದಲ್ಲಿ ತುಂಬಾ ಬರುತ್ತದೆ.","ಇದನ್ನು ಪ್ರಯತ್ನಿಸೋಣ."],
+      streak3:"ಸತತ ಮೂರು ಸರಿ. ಚೆನ್ನಾಗಿ ಹೋಗ್ತಿದೆ!", streak5:"ಸತತ ಐದು ಸರಿ. ಅದ್ಭುತ!", almostSay:"ಇನ್ನು ಸ್ವಲ್ಪ ಅಷ್ಟೇ. ಇನ್ನೊಮ್ಮೆ ಪ್ರಯತ್ನಿಸಿ.",
+      noSpeech:"ಧ್ವನಿ ಕೇಳಿಸಲಿಲ್ಲ. ಮಾತನಾಡಿ ಉತ್ತರಿಸಿ ಮೇಲೆ ಮತ್ತೆ ಟ್ಯಾಪ್ ಮಾಡಿ.",
+      minWords:3
+    }
+  };
+
+  var POS = {
+    noun:{en:"noun",hi:"संज्ञा",kn:"ನಾಮಪದ"},
+    verb:{en:"verb",hi:"क्रिया",kn:"ಕ್ರಿಯಾಪದ"},
+    adjective:{en:"adjective",hi:"विशेषण",kn:"ವಿಶೇಷಣ"}
+  };
+
+  var WORDS = [
+    { en:{ w:"punctual", pos:"adjective", say:"<b>PUNK</b>-choo-ul", def:"Arriving or doing something at the agreed time, not late.",
+           prompt:"Your new manager asks why being on time matters in your first week. Answer using <b>punctual</b>.",
+           model:"I'm always punctual, so you can count on me to be ready before the shift starts." },
+      hi:{ w:"समय का पाबंद", pos:"adjective", tr:"samay ka paaband", def:"जो तय समय पर पहुँचे या काम करे, देर न करे।",
+           prompt:"आपके नए मैनेजर पूछते हैं कि पहले हफ्ते में समय पर आना क्यों ज़रूरी है। <b>समय का पाबंद</b> का इस्तेमाल करके जवाब दीजिए।",
+           model:"मैं हमेशा समय का पाबंद रहता हूँ, इसलिए शिफ्ट शुरू होने से पहले तैयार मिलूँगा।", stems:["पाबंद"] },
+      kn:{ w:"ಸಮಯಪಾಲನೆ", pos:"noun", tr:"samayapaalane", def:"ಒಪ್ಪಿದ ಸಮಯಕ್ಕೆ ಸರಿಯಾಗಿ ಬರುವುದು ಅಥವಾ ಕೆಲಸ ಮಾಡುವುದು, ತಡ ಮಾಡದಿರುವುದು.",
+           prompt:"ನಿಮ್ಮ ಹೊಸ ಮ್ಯಾನೇಜರ್ ಮೊದಲ ವಾರದಲ್ಲಿ ಸಮಯಕ್ಕೆ ಬರುವುದು ಯಾಕೆ ಮುಖ್ಯ ಎಂದು ಕೇಳುತ್ತಾರೆ. <b>ಸಮಯಪಾಲನೆ</b> ಪದ ಬಳಸಿ ಉತ್ತರಿಸಿ.",
+           model:"ನಾನು ಯಾವಾಗಲೂ ಸಮಯಪಾಲನೆ ಮಾಡುತ್ತೇನೆ, ಶಿಫ್ಟ್ ಶುರುವಾಗುವ ಮೊದಲೇ ಸಿದ್ಧನಿರುತ್ತೇನೆ.", stems:["ಸಮಯಪಾಲನೆ","ಸಮಯಪಾಲಕ","ಸಮಯ ಪಾಲನೆ"] } },
+
+    { en:{ w:"deadline", pos:"noun", say:"<b>DED</b>-line", def:"The latest time or date by which something must be finished.",
+           prompt:"A teammate asks when the sales report is due. Answer using <b>deadline</b>.",
+           model:"The deadline is Friday at 5 pm, and I'll share a draft on Thursday." },
+      hi:{ w:"अंतिम तिथि", pos:"noun", tr:"antim tithi", def:"वह आखिरी समय या तारीख जब तक काम पूरा करना है।",
+           prompt:"एक साथी पूछता है कि सेल्स रिपोर्ट कब तक देनी है। <b>अंतिम तिथि</b> का इस्तेमाल करके जवाब दीजिए।",
+           model:"अंतिम तिथि शुक्रवार शाम 5 बजे है, और मैं गुरुवार को ड्राफ्ट भेज दूँगा।", stems:["अंतिम तिथि","अंतिम तारीख"] },
+      kn:{ w:"ಕೊನೆಯ ದಿನಾಂಕ", pos:"noun", tr:"koneya dinaanka", def:"ಕೆಲಸವನ್ನು ಮುಗಿಸಬೇಕಾದ ಕೊನೆಯ ಸಮಯ ಅಥವಾ ದಿನ.",
+           prompt:"ಒಬ್ಬ ಸಹೋದ್ಯೋಗಿ ಸೇಲ್ಸ್ ರಿಪೋರ್ಟ್ ಯಾವಾಗ ಕೊಡಬೇಕು ಎಂದು ಕೇಳುತ್ತಾರೆ. <b>ಕೊನೆಯ ದಿನಾಂಕ</b> ಬಳಸಿ ಉತ್ತರಿಸಿ.",
+           model:"ಕೊನೆಯ ದಿನಾಂಕ ಶುಕ್ರವಾರ ಸಂಜೆ 5 ಗಂಟೆ, ನಾನು ಗುರುವಾರವೇ ಡ್ರಾಫ್ಟ್ ಕಳಿಸುತ್ತೇನೆ.", stems:["ಕೊನೆಯ ದಿನಾಂಕ","ಕೊನೆ ದಿನಾಂಕ"] } },
+
+    { en:{ w:"collaborate", pos:"verb", say:"kuh-<b>LAB</b>-uh-rate", def:"To work together with other people on a shared task.",
+           prompt:"Explain how you'll work with the design team this month, using <b>collaborate</b>.",
+           model:"I'll collaborate with the design team every week so the screens match what users need." },
+      hi:{ w:"मिलकर काम करना", pos:"verb", tr:"milkar kaam karna", def:"किसी साझा काम पर दूसरों के साथ मिलकर काम करना।",
+           prompt:"बताइए कि इस महीने आप डिज़ाइन टीम के साथ कैसे काम करेंगे। <b>मिलकर काम</b> का इस्तेमाल कीजिए।",
+           model:"मैं हर हफ्ते डिज़ाइन टीम के साथ मिलकर काम करूँगा ताकि स्क्रीन यूज़र्स की ज़रूरत के हिसाब से बनें।", stems:["मिलकर"] },
+      kn:{ w:"ಜೊತೆಯಾಗಿ ಕೆಲಸ ಮಾಡು", pos:"verb", tr:"joteyaagi kelasa maadu", def:"ಒಂದೇ ಕೆಲಸಕ್ಕಾಗಿ ಬೇರೆಯವರ ಜೊತೆ ಸೇರಿ ಕೆಲಸ ಮಾಡುವುದು.",
+           prompt:"ಈ ತಿಂಗಳು ಡಿಸೈನ್ ಟೀಮ್ ಜೊತೆ ಹೇಗೆ ಕೆಲಸ ಮಾಡುತ್ತೀರಿ ಎಂದು ವಿವರಿಸಿ. <b>ಜೊತೆಯಾಗಿ ಕೆಲಸ</b> ಬಳಸಿ.",
+           model:"ಯೂಸರ್‌ಗಳಿಗೆ ಬೇಕಾದಂತೆ ಸ್ಕ್ರೀನ್‌ಗಳು ಇರಲಿ ಎಂದು ನಾನು ಪ್ರತಿ ವಾರ ಡಿಸೈನ್ ಟೀಮ್ ಜೊತೆಯಾಗಿ ಕೆಲಸ ಮಾಡುತ್ತೇನೆ.", stems:["ಜೊತೆಯಾಗಿ","ಜೊತೆಗೂಡಿ"] } },
+
+    { en:{ w:"feedback", pos:"noun", say:"<b>FEED</b>-back", def:"Comments on your work that help you improve it.",
+           prompt:"Your manager has just reviewed your first report. Ask for more detail, using <b>feedback</b>.",
+           model:"Could you give me some feedback on the report, so I know what to improve next time?" },
+      hi:{ w:"सुझाव", pos:"noun", tr:"sujhaav", def:"आपके काम पर राय, जिससे आप उसे बेहतर कर सकें।",
+           prompt:"आपके मैनेजर ने अभी आपकी पहली रिपोर्ट देखी है। <b>सुझाव</b> शब्द का इस्तेमाल करके और जानकारी माँगिए।",
+           model:"क्या आप मेरी रिपोर्ट पर कुछ सुझाव दे सकते हैं, ताकि अगली बार मैं इसे बेहतर कर सकूँ?", stems:["सुझाव"] },
+      kn:{ w:"ಪ್ರತಿಕ್ರಿಯೆ", pos:"noun", tr:"pratikriye", def:"ನಿಮ್ಮ ಕೆಲಸದ ಬಗ್ಗೆ ಅಭಿಪ್ರಾಯ, ಅದನ್ನು ಉತ್ತಮಗೊಳಿಸಲು ಸಹಾಯ ಮಾಡುತ್ತದೆ.",
+           prompt:"ನಿಮ್ಮ ಮ್ಯಾನೇಜರ್ ನಿಮ್ಮ ಮೊದಲ ರಿಪೋರ್ಟ್ ನೋಡಿದ್ದಾರೆ. <b>ಪ್ರತಿಕ್ರಿಯೆ</b> ಪದ ಬಳಸಿ ಹೆಚ್ಚಿನ ವಿವರ ಕೇಳಿ.",
+           model:"ಮುಂದಿನ ಬಾರಿ ಸುಧಾರಿಸಲು, ನನ್ನ ರಿಪೋರ್ಟ್ ಬಗ್ಗೆ ನಿಮ್ಮ ಪ್ರತಿಕ್ರಿಯೆ ತಿಳಿಸುತ್ತೀರಾ?", stems:["ಪ್ರತಿಕ್ರಿಯೆ"] } },
+
+    { en:{ w:"initiative", pos:"noun", say:"ih-<b>NISH</b>-uh-tiv", def:"Doing something useful on your own, without being told to.",
+           prompt:"You fixed a problem nobody asked you to fix. Tell your manager about it, using <b>initiative</b>.",
+           model:"I took the initiative to fix the broken customer sheet before the weekly review." },
+      hi:{ w:"पहल", pos:"noun", tr:"pahal", def:"बिना कहे खुद से कोई उपयोगी काम करना।",
+           prompt:"आपने एक ऐसी समस्या ठीक की जिसके लिए किसी ने नहीं कहा था। <b>पहल</b> शब्द का इस्तेमाल करके अपने मैनेजर को बताइए।",
+           model:"मैंने वीकली रिव्यू से पहले टूटी हुई कस्टमर शीट ठीक करने की पहल की।", stems:["पहल"] },
+      kn:{ w:"ಉಪಕ್ರಮ", pos:"noun", tr:"upakrama", def:"ಯಾರೂ ಹೇಳದೆ ನೀವೇ ಮುಂದಾಗಿ ಒಂದು ಉಪಯುಕ್ತ ಕೆಲಸ ಮಾಡುವುದು.",
+           prompt:"ಯಾರೂ ಹೇಳದ ಒಂದು ಸಮಸ್ಯೆಯನ್ನು ನೀವು ಸರಿಪಡಿಸಿದ್ದೀರಿ. <b>ಉಪಕ್ರಮ</b> ಪದ ಬಳಸಿ ನಿಮ್ಮ ಮ್ಯಾನೇಜರ್‌ಗೆ ತಿಳಿಸಿ.",
+           model:"ವಾರದ ರಿವ್ಯೂಗೆ ಮೊದಲು ಹಾಳಾಗಿದ್ದ ಕಸ್ಟಮರ್ ಶೀಟ್ ಸರಿಪಡಿಸುವ ಉಪಕ್ರಮ ನಾನೇ ತೆಗೆದುಕೊಂಡೆ.", stems:["ಉಪಕ್ರಮ"] } },
+
+    { en:{ w:"onboarding", pos:"noun", say:"<b>ON</b>-bor-ding", def:"The training and setup a new employee goes through when they join.",
+           prompt:"It's your first day. A friend texts to ask what you're doing this week. Reply using <b>onboarding</b>.",
+           model:"I'm in onboarding this week, learning the tools and meeting my team." },
+      hi:{ w:"प्रशिक्षण", pos:"noun", tr:"prashikshan", def:"नौकरी जॉइन करने पर नए कर्मचारी को दी जाने वाली ट्रेनिंग और सेटअप।",
+           prompt:"आज आपका पहला दिन है। एक दोस्त पूछता है कि इस हफ्ते क्या कर रहे हो। <b>प्रशिक्षण</b> शब्द का इस्तेमाल करके जवाब दीजिए।",
+           model:"इस हफ्ते मेरा प्रशिक्षण चल रहा है, मैं टूल्स सीख रहा हूँ और अपनी टीम से मिल रहा हूँ।", stems:["प्रशिक्षण"] },
+      kn:{ w:"ತರಬೇತಿ", pos:"noun", tr:"tarabeti", def:"ಹೊಸ ಉದ್ಯೋಗಿ ಕೆಲಸಕ್ಕೆ ಸೇರಿದಾಗ ಕೊಡುವ ತರಬೇತಿ ಮತ್ತು ಸಿದ್ಧತೆ.",
+           prompt:"ಇವತ್ತು ನಿಮ್ಮ ಮೊದಲ ದಿನ. ಈ ವಾರ ಏನು ಮಾಡ್ತಿದ್ದೀಯ ಎಂದು ಸ್ನೇಹಿತ ಕೇಳುತ್ತಾನೆ. <b>ತರಬೇತಿ</b> ಪದ ಬಳಸಿ ಉತ್ತರಿಸಿ.",
+           model:"ಈ ವಾರ ನನ್ನ ತರಬೇತಿ ನಡೀತಿದೆ, ಟೂಲ್ಸ್ ಕಲಿಯುತ್ತಿದ್ದೇನೆ ಮತ್ತು ನನ್ನ ಟೀಮ್‌ನ್ನು ಭೇಟಿಯಾಗುತ್ತಿದ್ದೇನೆ.", stems:["ತರಬೇತಿ"] } },
+
+    { en:{ w:"responsibility", pos:"noun", say:"ri-spon-suh-<b>BIL</b>-uh-tee", def:"A task or duty that is yours to handle.",
+           prompt:"A new hire asks what your role involves. Explain using <b>responsibility</b>.",
+           model:"My main responsibility is keeping customer records accurate and up to date." },
+      hi:{ w:"ज़िम्मेदारी", pos:"noun", tr:"zimmedaari", def:"वह काम या कर्तव्य जिसे संभालना आपका काम है।",
+           prompt:"एक नया कर्मचारी पूछता है कि आपका काम क्या है। <b>ज़िम्मेदारी</b> शब्द का इस्तेमाल करके समझाइए।",
+           model:"मेरी मुख्य ज़िम्मेदारी कस्टमर रिकॉर्ड को सही और अपडेट रखना है।", stems:["ज़िम्मेदार","जिम्मेदार"] },
+      kn:{ w:"ಜವಾಬ್ದಾರಿ", pos:"noun", tr:"javaabdaari", def:"ನೀವು ನೋಡಿಕೊಳ್ಳಬೇಕಾದ ಕೆಲಸ ಅಥವಾ ಕರ್ತವ್ಯ.",
+           prompt:"ಹೊಸ ಉದ್ಯೋಗಿ ನಿಮ್ಮ ಕೆಲಸ ಏನು ಎಂದು ಕೇಳುತ್ತಾರೆ. <b>ಜವಾಬ್ದಾರಿ</b> ಪದ ಬಳಸಿ ವಿವರಿಸಿ.",
+           model:"ಕಸ್ಟಮರ್ ರೆಕಾರ್ಡ್‌ಗಳನ್ನು ಸರಿಯಾಗಿ ಮತ್ತು ಅಪ್‌ಡೇಟ್ ಆಗಿ ಇಡುವುದು ನನ್ನ ಮುಖ್ಯ ಜವಾಬ್ದಾರಿ.", stems:["ಜವಾಬ್ದಾರಿ"] } },
+
+    { en:{ w:"communicate", pos:"verb", say:"kuh-<b>MYOO</b>-nih-kate", def:"To share information clearly with someone.",
+           prompt:"A client hasn't heard from you for two days about a delay. Say what you should have done, using <b>communicate</b>.",
+           model:"I should have communicated the delay to the client as soon as I knew about it." },
+      hi:{ w:"संवाद", pos:"noun", tr:"samvaad", def:"किसी से जानकारी साफ़-साफ़ साझा करना।",
+           prompt:"दो दिन से क्लाइंट को देरी के बारे में कोई खबर नहीं मिली। <b>संवाद</b> शब्द का इस्तेमाल करके बताइए कि आपको क्या करना चाहिए था।",
+           model:"देरी का पता चलते ही मुझे क्लाइंट से संवाद करना चाहिए था।", stems:["संवाद"] },
+      kn:{ w:"ಸಂವಹನ", pos:"noun", tr:"samvahana", def:"ಮಾಹಿತಿಯನ್ನು ಸ್ಪಷ್ಟವಾಗಿ ಇನ್ನೊಬ್ಬರಿಗೆ ತಿಳಿಸುವುದು.",
+           prompt:"ಎರಡು ದಿನದಿಂದ ಕ್ಲೈಂಟ್‌ಗೆ ತಡವಾಗಿರುವ ಬಗ್ಗೆ ಯಾವ ಮಾಹಿತಿಯೂ ಸಿಕ್ಕಿಲ್ಲ. <b>ಸಂವಹನ</b> ಪದ ಬಳಸಿ ನೀವು ಏನು ಮಾಡಬೇಕಿತ್ತು ಎಂದು ಹೇಳಿ.",
+           model:"ತಡವಾಗುತ್ತದೆ ಎಂದು ಗೊತ್ತಾದ ತಕ್ಷಣ ನಾನು ಕ್ಲೈಂಟ್ ಜೊತೆ ಸಂವಹನ ಮಾಡಬೇಕಿತ್ತು.", stems:["ಸಂವಹನ"] } },
+
+    { en:{ w:"reliable", pos:"adjective", say:"ri-<b>LY</b>-uh-bul", def:"Someone people can trust to do what they say.",
+           prompt:"Your manager is choosing who leads a client call. Say why it should be you, using <b>reliable</b>.",
+           model:"I'm reliable. I finish what I commit to and flag problems early." },
+      hi:{ w:"भरोसेमंद", pos:"adjective", tr:"bharosemand", def:"ऐसा व्यक्ति जिस पर भरोसा किया जा सके कि वह कहा हुआ काम करेगा।",
+           prompt:"आपके मैनेजर तय कर रहे हैं कि क्लाइंट कॉल कौन लेगा। <b>भरोसेमंद</b> शब्द का इस्तेमाल करके बताइए कि आप क्यों।",
+           model:"मैं भरोसेमंद हूँ। जो काम लेता हूँ उसे पूरा करता हूँ और समस्या पहले ही बता देता हूँ।", stems:["भरोसेमंद"] },
+      kn:{ w:"ನಂಬಿಕಸ್ಥ", pos:"adjective", tr:"nambikastha", def:"ಹೇಳಿದ ಕೆಲಸ ಮಾಡುತ್ತಾರೆ ಎಂದು ನಂಬಬಹುದಾದ ವ್ಯಕ್ತಿ.",
+           prompt:"ಕ್ಲೈಂಟ್ ಕಾಲ್ ಯಾರು ನಡೆಸಬೇಕು ಎಂದು ಮ್ಯಾನೇಜರ್ ತೀರ್ಮಾನಿಸುತ್ತಿದ್ದಾರೆ. <b>ನಂಬಿಕಸ್ಥ</b> ಪದ ಬಳಸಿ ಅದು ನೀವೇ ಯಾಕೆ ಎಂದು ಹೇಳಿ.",
+           model:"ನಾನು ನಂಬಿಕಸ್ಥ. ಒಪ್ಪಿಕೊಂಡ ಕೆಲಸ ಮುಗಿಸುತ್ತೇನೆ, ಸಮಸ್ಯೆ ಇದ್ದರೆ ಮೊದಲೇ ಹೇಳುತ್ತೇನೆ.", stems:["ನಂಬಿಕಸ್ಥ","ನಂಬಿಕೆಗೆ ಅರ್ಹ"] } },
+
+    { en:{ w:"professional", pos:"adjective", say:"pruh-<b>FESH</b>-uh-nul", def:"Behaving with the skill and manners expected at work.",
+           prompt:"A coworker is upset with a rude customer. Give them advice using <b>professional</b>.",
+           model:"Stay calm and professional. Listen first, then offer a fix." },
+      hi:{ w:"पेशेवर", pos:"adjective", tr:"peshevar", def:"काम की जगह पर अपेक्षित कौशल और व्यवहार दिखाना।",
+           prompt:"एक साथी एक बदतमीज़ ग्राहक से परेशान है। <b>पेशेवर</b> शब्द का इस्तेमाल करके उसे सलाह दीजिए।",
+           model:"शांत और पेशेवर रहो। पहले सुनो, फिर हल बताओ।", stems:["पेशेवर"] },
+      kn:{ w:"ವೃತ್ತಿಪರ", pos:"adjective", tr:"vruttipara", def:"ಕೆಲಸದ ಸ್ಥಳದಲ್ಲಿ ನಿರೀಕ್ಷಿಸುವ ಕೌಶಲ್ಯ ಮತ್ತು ನಡವಳಿಕೆ ತೋರಿಸುವುದು.",
+           prompt:"ಒಬ್ಬ ಸಹೋದ್ಯೋಗಿ ಒರಟು ಗ್ರಾಹಕನಿಂದ ಬೇಸರಗೊಂಡಿದ್ದಾರೆ. <b>ವೃತ್ತಿಪರ</b> ಪದ ಬಳಸಿ ಅವರಿಗೆ ಸಲಹೆ ಕೊಡಿ.",
+           model:"ಶಾಂತವಾಗಿ ಮತ್ತು ವೃತ್ತಿಪರವಾಗಿ ಇರಿ. ಮೊದಲು ಕೇಳಿಸಿಕೊಳ್ಳಿ, ನಂತರ ಪರಿಹಾರ ಹೇಳಿ.", stems:["ವೃತ್ತಿಪರ"] } }
+  ];
+
+  var KEYS = {"punctual": {"en": ["time", "early", "late", "shift", "clock", "schedule", "minutes", "before", "arrive", "office", "meeting", "week"], "hi": ["समय", "जल्दी", "देर", "शिफ्ट", "पहले", "मिनट", "ऑफिस", "हफ्ते"], "kn": ["ಸಮಯ", "ಬೇಗ", "ತಡ", "ಶಿಫ್ಟ್", "ಮೊದಲು", "ನಿಮಿಷ", "ಆಫೀಸ್", "ವಾರ"]}, "deadline": {"en": ["report", "friday", "monday", "date", "due", "submit", "finish", "complete", "tomorrow", "week", "draft", "pm"], "hi": ["रिपोर्ट", "तारीख", "शुक्रवार", "सोमवार", "पूरा", "जमा", "कल", "हफ्ते", "ड्राफ्ट"], "kn": ["ರಿಪೋರ್ಟ್", "ದಿನಾಂಕ", "ಶುಕ್ರವಾರ", "ಸೋಮವಾರ", "ಮುಗಿಸ", "ಕೊಡ", "ನಾಳೆ", "ವಾರ", "ಡ್ರಾಫ್ಟ್"]}, "collaborate": {"en": ["team", "design", "together", "designers", "meet", "share", "weekly", "month", "project"], "hi": ["टीम", "डिज़ाइन", "साथ", "हफ्ते", "महीने", "प्रोजेक्ट"], "kn": ["ಟೀಮ್", "ಡಿಸೈನ್", "ಜೊತೆ", "ವಾರ", "ತಿಂಗಳು", "ಪ್ರಾಜೆಕ್ಟ್"]}, "feedback": {"en": ["report", "improve", "manager", "could", "please", "share", "give", "better", "next time", "work"], "hi": ["रिपोर्ट", "बेहतर", "सुधार", "मैनेजर", "बताइए", "दीजिए", "अगली"], "kn": ["ರಿಪೋರ್ಟ್", "ಉತ್ತಮ", "ಸುಧಾರ", "ಮ್ಯಾನೇಜರ್", "ತಿಳಿಸ", "ಮುಂದಿನ"]}, "initiative": {"en": ["fixed", "fix", "problem", "solved", "myself", "own", "took", "started", "noticed", "issue"], "hi": ["ठीक", "समस्या", "खुद", "किया", "शुरू"], "kn": ["ಸರಿಪಡಿಸ", "ಸಮಸ್ಯೆ", "ನಾನೇ", "ತೆಗೆದುಕೊಂಡ", "ಶುರು"]}, "onboarding": {"en": ["first", "week", "day", "training", "team", "learning", "tools", "meeting", "new", "joined"], "hi": ["पहला", "हफ्ते", "दिन", "टीम", "सीख", "नया", "टूल"], "kn": ["ಮೊದಲ", "ವಾರ", "ದಿನ", "ಟೀಮ್", "ಕಲಿ", "ಹೊಸ", "ಟೂಲ್"]}, "responsibility": {"en": ["role", "job", "handle", "manage", "task", "main", "records", "customers", "work", "team"], "hi": ["काम", "भूमिका", "संभाल", "मुख्य", "रिकॉर्ड", "ग्राहक"], "kn": ["ಕೆಲಸ", "ನೋಡಿಕೊ", "ಮುಖ್ಯ", "ರೆಕಾರ್ಡ್", "ಗ್ರಾಹಕ"]}, "communicate": {"en": ["client", "delay", "should", "told", "inform", "update", "call", "email", "earlier", "sooner"], "hi": ["क्लाइंट", "देरी", "चाहिए", "बताना", "कॉल", "ईमेल", "पहले"], "kn": ["ಕ್ಲೈಂಟ್", "ತಡ", "ಬೇಕಿತ್ತು", "ತಿಳಿಸ", "ಕಾಲ್", "ಈಮೇಲ್", "ಮೊದಲೇ"]}, "reliable": {"en": ["trust", "always", "finish", "deliver", "client", "call", "lead", "count on", "commit", "on time"], "hi": ["भरोसा", "हमेशा", "पूरा", "क्लाइंट", "कॉल", "समय"], "kn": ["ನಂಬ", "ಯಾವಾಗಲೂ", "ಮುಗಿಸ", "ಕ್ಲೈಂಟ್", "ಕಾಲ್", "ಸಮಯ"]}, "professional": {"en": ["calm", "customer", "polite", "listen", "respect", "rude", "stay", "solution", "handle"], "hi": ["शांत", "ग्राहक", "सुन", "सम्मान", "हल", "रहो"], "kn": ["ಶಾಂತ", "ಗ್ರಾಹಕ", "ಕೇಳ", "ಗೌರವ", "ಪರಿಹಾರ", "ಇರಿ"]}};
+  var LOCALE = { en:'en-IN', hi:'hi-IN', kn:'kn-IN' };
+  var $ = function(id){ return document.getElementById(id); };
+  var synth = window.speechSynthesis || null;
+  var SR = window.SpeechRecognition || window.webkitSpeechRecognition || null;
+  var lang = 'en';
+
+  function t(key, vars){
+    var s = T[lang][key];
+    if (vars) Object.keys(vars).forEach(function(k){ s = String(s).split('{'+k+'}').join(vars[k]); });
+    return s;
+  }
+  function W(i){ return WORDS[i][lang]; }
+  function plain(html){ return html.replace(/<[^>]+>/g,''); }
+  function pick(a){ return a[Math.floor(Math.random()*a.length)]; }
+
+  /* ---------- speech out ---------- */
+  var voices = [], runId = 0, speaking = false;
+  function vlang(v){ return (v.lang || '').toLowerCase().replace('_','-'); }
+  function score(v){
+    var n = (v.name || '').toLowerCase(), sc = 0;
+    if (/google/.test(n)) sc += 30;
+    if (/neural|natural|online|enhanced|premium|wavenet|network/.test(n)) sc += 40;
+    if (!v.localService) sc += 10;
+    return sc;
+  }
+  function voiceFor(l){
+    var loc = LOCALE[l].toLowerCase();
+    var list = voices.filter(function(v){ return vlang(v) === loc; });
+    if (!list.length && l !== 'en') list = voices.filter(function(v){ return vlang(v).indexOf(l) === 0; });
+    if (!list.length && l === 'en') list = voices.filter(function(v){ return vlang(v).indexOf('en') === 0; });
+    list.sort(function(a,b){ return score(b)-score(a); });
+    return list[0] || null;
+  }
+  function loadVoices(){ if (synth) voices = synth.getVoices() || []; }
+  if (synth){
+    try { synth.cancel(); } catch(e){}
+    loadVoices();
+    if ('onvoiceschanged' in synth) synth.onvoiceschanged = loadVoices;
+    setTimeout(loadVoices, 700);
+  }
+
+  function setSpeaking(on){
+    speaking = on;
+    $('wave').classList.toggle('on', on);
+    $('speakBtn').classList.toggle('on', on);
+    $('speakLbl').textContent = on ? t('stop') : t('hear');
+  }
+  function stopSpeech(){
+    runId++;
+    if (synth){ try { synth.cancel(); } catch(e){} }
+    setSpeaking(false);
+  }
+  function speakSeq(parts){
+    if (!synth){ $('hint').textContent = t('noVoice'); return; }
+    runId++; var my = runId, i = 0;
+    try { synth.cancel(); } catch(e){}
+    var out = [];
+    parts.forEach(function(p){
+      if (p.gap){ out.push(p); return; }
+      String(p.text).split(/(?<=[.!?\u0964])\s+/).forEach(function(seg){ if (seg.trim()) out.push({ text:seg.trim(), lang:p.lang, rate:p.rate }); });
+      out.push({ gap:220 });
+    });
+    parts = out;
+    setSpeaking(true);
+    function next(){
+      if (my !== runId) return;
+      if (i >= parts.length){ setSpeaking(false); return; }
+      var p = parts[i++];
+      if (p.gap){ setTimeout(next, p.gap); return; }
+      var v = voiceFor(p.lang);
+      if (!v && voices.length && p.lang !== 'en'){ $('hint').textContent = T[p.lang].noLangVoice; }
+      var u = new SpeechSynthesisUtterance(p.text);
+      if (v) u.voice = v;
+      u.lang = v ? v.lang : LOCALE[p.lang];
+      u.rate = p.rate || 0.95;
+      u.pitch = 1.05;
+      u.onend = u.onerror = function(){ if (my === runId) setTimeout(next, 120); };
+      try { synth.speak(u); synth.resume(); } catch(e){ next(); }
+    }
+    setTimeout(next, 90);
+  }
+  function say(text, rate){ speakSeq([{ text:text, lang:lang, rate:rate }]); }
+  function hearParts(i){ var w = W(i); return [{ text:w.w, lang:lang }, { text:plain(w.prompt), lang:lang }]; }
+  function slowParts(i){
+    var w = W(i);
+    if (lang === 'en') return [{ text:w.w, lang:'en', rate:0.7 }, { text:plain(w.say).replace(/-/g,', '), lang:'en', rate:0.6 }, { text:w.w, lang:'en', rate:0.8 }];
+    return [{ text:w.w, lang:lang, rate:0.55 }, { text:w.w, lang:lang, rate:0.75 }];
+  }
+
+  document.addEventListener('visibilitychange', function(){ if (document.hidden){ stopSpeech(); stopListening(); } });
+  window.addEventListener('pagehide', function(){ stopSpeech(); stopListening(); });
+
+  /* ---------- speech to text (until the user taps stop) ---------- */
+  var rec = null, listening = false, committed = '', sessionText = '', restarts = 0;
+  function setListening(on){
+    listening = on;
+    $('micBtn').classList.toggle('on', on);
+    $('micBtn').setAttribute('aria-pressed', on ? 'true' : 'false');
+    $('answerWrap').classList.toggle('listening', on);
+    $('listenNote').hidden = !on;
+    $('listenNote').textContent = t('listening');
+    if (!on) polishText();
+  }
+  function polishText(){
+    if (lang !== 'en') return;
+    var box = $('answerBox'), v = box.value.trim();
+    if (!v) return;
+    v = v.charAt(0).toUpperCase() + v.slice(1);
+    v = v.replace(/\bi\b/g, 'I');
+    if (!/[.!?]$/.test(v)) v += '.';
+    box.value = v;
+  }
+  var heard = false, kbTimer = null;
+  function keyboardFallback(extra){
+    stopListening();
+    $('hint').textContent = (extra ? extra + ' ' : '') + t('kbMic');
+    $('answerBox').focus();
+  }
+  function autosize(){ var b = $('answerBox'); b.style.height = 'auto'; b.style.height = Math.min(b.scrollHeight + 2, 320) + 'px'; }
+  function endsWithText(a, b){ a = a.trim().toLowerCase(); b = b.trim().toLowerCase(); return !!b && a.slice(-b.length) === b; }
+  function joinText(a, b){ a = a.trim(); b = b.trim(); return a && b ? a + ' ' + b : (a || b); }
+  function sameStart(a, b){ return b.toLowerCase().indexOf(a.toLowerCase().trim()) === 0; }
+  var ANDROID = /Android/i.test(navigator.userAgent);
+  function startSession(){
+    sessionText = '';
+    rec = new SR();
+    rec.lang = LOCALE[lang]; rec.continuous = !ANDROID; rec.interimResults = true; rec.maxAlternatives = 1;
+    rec.onresult = function(e){
+      if (ANDROID){
+        sessionText = e.results[e.results.length - 1][0].transcript.trim();
+        if (sessionText) heard = true;
+        $('answerBox').value = endsWithText(committed, sessionText) ? committed : joinText(committed, sessionText); autosize();
+        return;
+      }
+      var fin = '', interim = '';
+      for (var i = 0; i < e.results.length; i++){
+        var tx = e.results[i][0].transcript;
+        if (e.results[i].isFinal){ fin = (fin && sameStart(fin, tx)) ? tx : joinText(fin, tx); }
+        else { interim = (interim && sameStart(interim, tx)) ? tx : joinText(interim, tx); }
+      }
+      if (interim && fin && sameStart(fin, interim)) fin = '';
+      sessionText = joinText(fin, interim);
+      if (sessionText) heard = true;
+      $('answerBox').value = joinText(committed, sessionText); autosize();
+    };
+    rec.onerror = function(e){
+      if (e.error === 'no-speech' || e.error === 'aborted') return;
+      if (e.error === 'not-allowed' && window.self !== window.top){ $('hint').textContent = t('micBlocked'); listening = false; setListening(false); return; }
+      keyboardFallback(t('srErr', { e: e.error }));
+    };
+    rec.onend = function(){
+      var st = sessionText.trim();
+      if (st && !endsWithText(committed, st)) committed = joinText(committed, st);
+      sessionText = '';
+      $('answerBox').value = committed; autosize();
+      if (listening && restarts < 40){ restarts++; try { startSession(); return; } catch(e){} }
+      rec = null;
+      if (listening) setListening(false);
+    };
+    rec.start();
+  }
+  function listen(){
+    if (listening){ stopListening(); if (!$('answerBox').value.trim()) $('hint').textContent = t('noSpeech'); return; }
+    if (!SR){ keyboardFallback(); return; }
+    stopSpeech();
+    $('hint').textContent = '';
+    committed = $('answerBox').value.trim(); restarts = 0;
+    setListening(true); heard = false;
+    clearTimeout(kbTimer);
+    kbTimer = setTimeout(function(){ if (listening && !heard && !$('answerBox').value.trim()) keyboardFallback(); }, 7000);
+    try { startSession(); } catch(err){ keyboardFallback(t('srErr', { e: 'start' })); }
+  }
+  function stopListening(){
+    if (!listening && !rec) return;
+    listening = false; clearTimeout(kbTimer);
+    if (rec){ try { rec.stop(); } catch(e){} }
+    setListening(false);
+  }
+  $('micBtn').hidden = false;
+  $('answerBox').addEventListener('input', function(){ if (listening) stopListening(); autosize(); });
+
+  /* ---------- session state ---------- */
+  var order, queue, attempts, result, sentences, retried, firstTry, streak, bestStreak, current, answered, fbState, firstShown, snap, shown;
+  function reset(){
+    order = shuffled(WORDS.length); queue = order.slice();
+    attempts = {}; result = {}; sentences = {}; retried = {};
+    firstTry = 0; streak = 0; bestStreak = 0; current = null; answered = false; fbState = null; firstShown = false; snap = null; shown = 0;
+  }
+  function shuffled(n){
+    var a=[]; for (var i=0;i<n;i++) a.push(i);
+    for (var j=a.length-1;j>0;j--){ var k=Math.floor(Math.random()*(j+1)); var x=a[j]; a[j]=a[k]; a[k]=x; }
+    return a;
+  }
+
+  /* ---------- rendering ---------- */
+  function renderStatic(){
+    document.documentElement.lang = LOCALE[lang];
+    document.body.classList.remove('l-en','l-hi','l-kn'); document.body.classList.add('l-'+lang);
+    document.querySelectorAll('[data-t]').forEach(function(el){ el.textContent = t(el.getAttribute('data-t')); });
+    $('answerBox').placeholder = t('placeholder');
+    $('speakLbl').textContent = speaking ? t('stop') : t('hear');
+    $('micBtn').setAttribute('aria-label', t('voice')); $('micBtn').title = t('voice');
+    $('listenNote').textContent = t('listening');
+    $('submitBtn').textContent = answered ? t('checkAgain') : t('check');
+    document.querySelectorAll('.pill').forEach(function(p){ p.setAttribute('aria-pressed', p.dataset.lang === lang ? 'true' : 'false'); });
+    var chips = $('wordChips'); chips.innerHTML = '';
+    WORDS.forEach(function(item){ var c = document.createElement('span'); c.className='chip'; c.textContent=item[lang].w; chips.appendChild(c); });
+  }
+  function renderProgress(){
+    var done = Object.keys(result).length;
+    $('progLabel').textContent = t('wordOf', { n: Math.max(1, Math.min(shown, WORDS.length)), t: WORDS.length });
+    $('progBar').style.width = Math.round(done/WORDS.length*100) + '%';
+    $('streak').textContent = streak >= 2 ? t('inARow', { n: streak }) : '';
+  }
+  function renderWord(){
+    if (current === null) return;
+    var w = W(current);
+    $('wordText').textContent = w.w;
+    $('wordPos').textContent = POS[w.pos][lang];
+    var sayLine = lang === 'en' ? w.say : w.tr;
+    $('wordSay').innerHTML = t('sayIt') + ' ' + sayLine + (retried[current] ? ' &middot; ' + t('secondRound') : '');
+    $('meaningText').textContent = w.def;
+    $('promptText').innerHTML = w.prompt;
+    renderProgress();
+    if (fbState) renderFeedback();
+  }
+  function renderFeedback(){
+    var fb = $('feedback'), s = fbState;
+    if (!s){ fb.hidden = true; fb.innerHTML = ''; return; }
+    var w = W(current);
+    var head = typeof s.head === 'function' ? s.head() : s.head;
+    var body = typeof s.body === 'function' ? s.body() : s.body;
+    fb.className = 'feedback ' + s.kind; fb.hidden = false;
+    fb.innerHTML = '<div class="fb-head"></div><div class="fb-body"></div>' + (s.checks ? '<div><span class="checks-label"></span><ul class="checks"></ul></div>' : '') + (s.model ? '<div class="model"><span></span><div></div></div>' : '');
+    fb.querySelector('.fb-head').textContent = head;
+    fb.querySelector('.fb-body').textContent = body || '';
+    if (s.checks){
+      fb.querySelector('.checks-label').textContent = t('checked');
+      var ul = fb.querySelector('.checks');
+      s.checks.forEach(function(c){ if (!c.text) return; var li = document.createElement('li'); li.className = c.kind; li.textContent = c.text; ul.appendChild(li); });
+    }
+    if (s.model){ fb.querySelector('.model span').textContent = t('modelLabel'); fb.querySelector('.model div').textContent = w.model; }
+  }
+  function setFeedback(state){ fbState = state; renderFeedback(); }
+
+  function setLang(l){
+    if (!T[l] || l === lang) return;
+    lang = l;
+    stopSpeech(); stopListening();
+    $('hint').textContent = '';
+    renderStatic();
+    if (!$('playCard').hidden && current !== null){ resetWord(); speakSeq(hearParts(current)); }
+    if (!$('summaryCard').hidden) showSummary(true);
+  }
+  document.querySelectorAll('.pill').forEach(function(p){ p.addEventListener('click', function(){ setLang(p.dataset.lang); }); });
+
+  /* ---------- flow ---------- */
+  function resetWord(){
+    stopListening(); stopSpeech();
+    if (current !== null && snap){
+      firstTry = snap.firstTry; streak = snap.streak; bestStreak = snap.bestStreak;
+      delete result[current]; delete sentences[current]; attempts[current] = 0;
+      if (!snap.retried){ delete retried[current]; }
+      while (queue.length > snap.qlen) queue.pop();
+    }
+    answered = false;
+    $('answerBox').value = ''; autosize();
+    $('hint').textContent = '';
+    $('nextRow').hidden = true;
+    $('skipBtn').disabled = false;
+    $('submitBtn').textContent = t('check');
+    setFeedback(null);
+    if (current !== null) renderWord();
+  }
+  function nextWord(){
+    setFeedback(null);
+    $('nextRow').hidden = true;
+    $('answerBox').value = ''; autosize();
+    $('skipBtn').disabled = false;
+    $('hint').textContent = '';
+    answered = false;
+    $('submitBtn').textContent = t('check');
+    stopListening();
+    if (!queue.length){ showSummary(); return; }
+    current = queue.shift();
+    if (!retried[current]) shown++;
+    snap = { firstTry:firstTry, streak:streak, bestStreak:bestStreak, retried:!!retried[current], qlen:queue.length };
+    renderWord();
+    var intro = firstShown ? pick(t('intros')) : t('greet');
+    firstShown = true;
+    speakSeq([{ text:intro, lang:lang }].concat(hearParts(current)));
+    $('answerBox').focus();
+  }
+
+  function norm(s){ return (s || '').normalize('NFC').replace(/़/g,'').toLowerCase(); }
+  function usesWord(text, i){
+    if (lang === 'en'){
+      var tx = ' ' + text.toLowerCase().replace(/[^a-z\s']/g,' ') + ' ';
+      var stem = WORDS[i].en.w;
+      var forms = [stem, stem+'s', stem+'d', stem+'ed', stem+'ing', stem+'ly', stem+'ity'];
+      if (/e$/.test(stem)) forms.push(stem.slice(0,-1)+'ing', stem.slice(0,-1)+'ion');
+      if (stem === 'reliable') forms.push('reliably');
+      if (stem === 'responsibility') forms.push('responsibilities');
+      return forms.some(function(f){ return tx.indexOf(' '+f+' ') !== -1; });
+    }
+    var n = norm(text);
+    return W(i).stems.some(function(st){ return n.indexOf(norm(st)) !== -1; });
+  }
+  function countWords(text){ return text.trim().split(/\s+/).filter(Boolean).length; }
+  function detectScript(text){
+    var c = { hi:(text.match(/[\u0900-\u097F]/g)||[]).length, kn:(text.match(/[\u0C80-\u0CFF]/g)||[]).length, en:(text.match(/[A-Za-z]/g)||[]).length };
+    var best = 'en'; ['hi','kn'].forEach(function(k){ if (c[k] > c[best]) best = k; });
+    return c[best] ? best : lang;
+  }
+  function analyze(text, i){
+    var words = text.trim().split(/\s+/).filter(Boolean);
+    var lower = words.map(function(w){ return norm(w).replace(/[.,!?;:"'()\u0964]/g,''); });
+    var uniq = {}; lower.forEach(function(w){ uniq[w] = 1; });
+    var found = detectScript(text);
+    var own = [norm(W(i).w)].concat((W(i).stems || []).map(norm));
+    var keys = (KEYS[WORDS[i].en.w][lang] || []).filter(function(k){ var nk = norm(k); return !own.some(function(o){ return o.indexOf(nk) !== -1 || nk.indexOf(o) !== -1; }); });
+    var n = ' ' + norm(text).replace(/[.,!?;:"'()\u0964]/g,' ') + ' ';
+    var fits = keys.some(function(k){ return n.indexOf(norm(k)) !== -1; });
+    var a = {
+      langOk: found === lang, found: found,
+      hasWord: usesWord(text, i),
+      longEnough: words.length >= T[lang].minWords,
+      repeated: words.length >= 4 && Object.keys(uniq).length / words.length < 0.5,
+      fits: fits, keys: keys,
+      capsTip: lang === 'en' && (!/^[A-Z]/.test(text.trim()) || !/[.!?]$/.test(text.trim()))
+    };
+    a.pass = a.langOk && a.hasWord && a.longEnough && !a.repeated;
+    return a;
+  }
+  function checklist(a, i){
+    var w = W(i).w, L = t('L'), list = [];
+    list.push(a.langOk ? { kind:'ok', text:t('chkLang', { want:L[lang] }) } : { kind:'no', text:t('chkLangNo', { found:L[a.found], want:L[lang] }) });
+    if (a.langOk){
+      list.push(a.hasWord ? { kind:'ok', text:t('chkWord', { w:w }) } : { kind:'no', text:t('chkWordNo', { w:w }) });
+      if (a.repeated) list.push({ kind:'no', text:t('chkRep') });
+      else list.push(a.longEnough ? { kind:'ok', text:t('chkLen') } : { kind:'no', text:t('chkLenNo', { m:T[lang].minWords }) });
+      list.push(a.fits ? { kind:'ok', text:t('chkFit') } : { kind:'tip', text:t('chkFitNo', { k: a.keys.slice(0,2).map(function(k){ return '"' + k + '"'; }).join(t('or')) }) });
+      if (a.capsTip && t('chkCaps')) list.push({ kind:'tip', text:t('chkCaps') });
+    }
+    return list;
+  }
+
+  function lockAndOfferNext(){
+    answered = true;
+    $('skipBtn').disabled = true;
+    $('submitBtn').textContent = t('checkAgain');
+    $('nextRow').hidden = false;
+  }
+
+  function submitAnswer(){
+    if (listening) stopListening();
+    var text = $('answerBox').value.trim();
+    if (!text){ setFeedback({ kind:'bad', head:t('emptyH'), body:t('emptyB') }); say(t('emptyB')); return; }
+    var a = analyze(text, current), checks = checklist(a, current);
+    if (answered){
+      setFeedback({ kind: a.pass ? 'good' : 'bad', head:t('recheckH'), body:'', checks:checks, model:true });
+      say(a.pass ? t('recheckGood') : t('almostSay'));
+      return;
+    }
+    attempts[current] = (attempts[current]||0) + 1;
+
+    if (a.pass){
+      var first = attempts[current] === 1 && !retried[current];
+      if (first){ firstTry++; streak++; bestStreak = Math.max(bestStreak, streak); } else { streak = 0; }
+      result[current] = 'mastered';
+      sentences[current] = { text:text, lang:lang };
+      var headIdx = Math.floor(Math.random()*3), s = streak, wasFirst = first;
+      setFeedback({ kind:'good', model:true, checks:checks,
+        head:(wasFirst ? t('good1') : t('good2'))[headIdx % (wasFirst ? 3 : 2)],
+        body: s >= 3 ? t('streakBody', { n:s }) : t('pbBody') });
+      var hd = (wasFirst ? t('good1') : t('good2'))[headIdx % (wasFirst ? 3 : 2)];
+      var cheer = streak === 5 ? ' ' + t('streak5') : (streak === 3 ? ' ' + t('streak3') : '');
+      speakSeq([{ text: hd + cheer + ' ' + t('anotherWay'), lang:lang }, { text: W(current).model, lang:lang }]);
+      renderProgress(); lockAndOfferNext();
+      return;
+    }
+
+    streak = 0;
+    if (attempts[current] < 2){
+      setFeedback({ kind:'bad', head:t('almost'), body:t('tryAgain'), checks:checks });
+      say(a.langOk ? t('almostSay') : t('wrongLangSay'));
+      renderProgress();
+      return;
+    }
+
+    if (!retried[current]){
+      retried[current] = true; attempts[current] = 0; queue.push(current);
+      setFeedback({ kind:'bad', model:true, checks:checks, head:t('comeBack'), body:W(current).w + ': ' + W(current).def });
+      speakSeq([{ text: t('comeBack') + '. ' + t('listenUse'), lang:lang }, { text: W(current).model, lang:lang }, { text: t('moveOn'), lang:lang }]);
+    } else {
+      result[current] = 'practice';
+      setFeedback({ kind:'bad', model:true, checks:checks, head:t('practiceH'), body:t('practiceB') });
+      speakSeq([{ text: W(current).model, lang:lang }, { text: t('moveOn'), lang:lang }]);
+    }
+    renderProgress(); lockAndOfferNext();
+  }
+
+  function skipWord(){
+    streak = 0;
+    if (!retried[current]){ retried[current] = true; attempts[current] = 0; queue.push(current); }
+    else { result[current] = 'practice'; }
+    nextWord();
+  }
+
+  function showSummary(silent){
+    stopListening();
+    $('playCard').hidden = true; $('summaryCard').hidden = false;
+    var mastered = order.filter(function(i){ return result[i]==='mastered'; }).length;
+    var acc = Math.round(firstTry/WORDS.length*100);
+    $('statMastered').textContent = mastered + '/' + WORDS.length;
+    $('statAccuracy').textContent = acc + '%';
+    $('statStreak').textContent = bestStreak;
+    var weak = order.filter(function(i){ return result[i]!=='mastered'; }).map(function(i){ return W(i).w; });
+    $('verdict').textContent = mastered === WORDS.length ? (acc >= 80 ? t('vAllHigh') : t('vAll')) : t('vPart', { m:mastered, t:WORDS.length, list: weak.join(', ') });
+
+    var list = $('wordlist'); list.innerHTML = '';
+    order.forEach(function(i){
+      var ok = result[i]==='mastered';
+      var tag = ok ? (retried[i] ? t('secondRound') : (attempts[i]===1 ? t('tag1') : t('tag2'))) : t('tagPractice');
+      var width = ok ? (retried[i] ? 33 : (attempts[i]===1 ? 100 : 66)) : 12;
+      var row = document.createElement('div'); row.className='wl-row';
+      row.innerHTML = '<b></b><span class="wl-bar"><i></i></span><span class="wl-tag"></span>';
+      row.querySelector('b').textContent = W(i).w;
+      var bar = row.querySelector('.wl-bar i'); bar.style.width = width + '%'; bar.style.background = 'var(--' + (ok ? 'good' : 'bad') + ')';
+      var tg = row.querySelector('.wl-tag'); tg.className = 'wl-tag ' + (ok ? 'mastered' : 'practice'); tg.textContent = tag;
+      list.appendChild(row);
+    });
+
+    var pb = $('phrasebook'); pb.innerHTML = '';
+    var any = false;
+    order.forEach(function(i){
+      if (!sentences[i]) return; any = true;
+      var d = document.createElement('div'); d.className='pb-item';
+      d.innerHTML = '<small></small><span></span>';
+      d.querySelector('small').textContent = WORDS[i][sentences[i].lang].w;
+      d.querySelector('span').textContent = sentences[i].text;
+      pb.appendChild(d);
+    });
+    if (!any){ var e = document.createElement('p'); e.className = 'empty'; e.textContent = t('pbEmpty'); pb.appendChild(e); }
+    $('copyBtn').hidden = !any;
+    if (!silent) say(mastered === WORDS.length ? t('endAll') : t('endPart', { m:mastered, t:WORDS.length }));
+  }
+
+  function phrasebookText(){
+    return order.filter(function(i){ return sentences[i]; }).map(function(i){ return WORDS[i][sentences[i].lang].w + ': ' + sentences[i].text; }).join('\n');
+  }
+
+  $('copyBtn').addEventListener('click', function(){
+    var txt = phrasebookText();
+    var done = function(){ $('copyNote').textContent = t('copied'); };
+    var fallback = function(){
+      var r = document.createRange(); r.selectNodeContents($('phrasebook'));
+      var s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+      $('copyNote').textContent = t('selected');
+    };
+    try { navigator.clipboard.writeText(txt).then(done, fallback); } catch(e){ fallback(); }
+  });
+
+  $('beginBtn').addEventListener('click', function(){ reset(); $('startCard').hidden = true; $('playCard').hidden = false; nextWord(); });
+  $('submitBtn').addEventListener('click', submitAnswer);
+  $('clearBtn').addEventListener('click', function(){
+    resetWord();
+    $('answerBox').focus();
+  });
+  $('nextBtn').addEventListener('click', nextWord);
+  $('skipBtn').addEventListener('click', function(){ stopSpeech(); stopListening(); skipWord(); });
+  $('micBtn').addEventListener('click', listen);
+  $('speakBtn').addEventListener('click', function(){
+    if (speaking){ stopSpeech(); return; }
+    if (current !== null){ $('hint').textContent = ''; speakSeq(hearParts(current)); }
+  });
+  $('slowBtn').addEventListener('click', function(){ if (current !== null){ $('hint').textContent = ''; speakSeq(slowParts(current)); } });
+  $('answerBox').addEventListener('keydown', function(e){ if (e.key==='Enter' && !e.shiftKey){ e.preventDefault(); submitAnswer(); } });
+  document.addEventListener('keydown', function(e){ if (e.key==='Enter' && answered && document.activeElement !== $('answerBox') && document.activeElement !== $('nextBtn')){ e.preventDefault(); nextWord(); } });
+  $('restartBtn').addEventListener('click', function(){ stopSpeech(); $('summaryCard').hidden = true; $('startCard').hidden = false; $('copyNote').textContent = ''; });
+
+  reset();
+  renderStatic();
+  setSpeaking(false);
+})();
+</script>
+
+</body>
+</html>
